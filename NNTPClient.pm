@@ -9,7 +9,7 @@ use strict qw(vars subs);
 use vars qw($VERSION $fhcnt);
 
 $fhcnt = 0;			# File handle counter, to insure unique socket.
-$VERSION = (qw$Revision: 0.32 $)[1];
+$VERSION = (qw$Revision: 0.33 $)[1];
 
 # Create a new NNTP object.  Set up defaults for host and port, and
 # attempt connection.  For host, if not supplied, check the
@@ -300,9 +300,9 @@ sub newgroups {
     $me->command("NEWGROUPS $since $dist");
 }
 
-# List new news since date/time.  If first arguement is a timestamp
+# List new news since date/time.  If first argument is a timestamp
 # instead of a group, use default group.  Otherwise use second
-# arguement for time stamp.  Default group is set by the group method,
+# argument for time stamp.  Default group is set by the group method,
 # or is all groups (*) if not set.
 sub newnews {
     my $me = shift;
@@ -390,7 +390,7 @@ sub DESTROY {
 }
 
 ########################################################################
-# Extended NNTP methods.  Not all of these are impemented on all
+# Extended NNTP methods.  Not all of these are implemented on all
 # servers.
 ########################################################################
 
@@ -953,7 +953,7 @@ I<newnews> functions.  A false value means that local time is used.
 
 Returns version number.
 
-This document represents @(#) $Revision: 0.32 $.
+This document represents @(#) $Revision: 0.33 $.
 
 =back
 
@@ -1455,6 +1455,6 @@ Rodger Anderson  <rodger@boi.hp.com>
 
 =head1 COPYRIGHT
 
-Copyright (c) 1995 Rodger Anderson. All rights reserved.
+Copyright 1995 Rodger Anderson. All rights reserved.
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

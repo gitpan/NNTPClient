@@ -63,6 +63,8 @@ then it probably is "Year 2000" compliant.
 CHANGES
 
 RELEASED TO CPAN
+0.33 Removed (c), fixed spelling.  Removed date checks from test.pl.
+
 0.32 Added Y2K flag and method to enable use with old servers.
 
 0.31 Documented xhdr allows Message-ID.
@@ -150,6 +152,6 @@ You might also try:
 
 COPYRIGHT
 
-Copyright (c) 1995 Rodger Anderson. All rights reserved.  This module
+Copyright 1995 Rodger Anderson. All rights reserved.  This module
 is free software; you may redistribute and/or modify it under the same
 terms as Perl itself.

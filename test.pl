@@ -22,12 +22,3 @@ $c = new News::NNTPClient("","",2);
 
 print "not " unless $c->ok;
 print "ok 2\n";
-
-print "not " unless $c->yymmdd_hhmmss(946710000) eq "20000101 000000";
-print "ok 3\n";
-
-$c->y2k(0);
-
-print "not " unless $c->yymmdd_hhmmss(946709999) eq "991231 235959";
-print "ok 4\n";
-
