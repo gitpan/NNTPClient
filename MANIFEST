@@ -1,0 +1,5 @@
+MANIFEST
+README
+Makefile.PL
+NNTPClient.pm
+NNTPFetchProgress.pm

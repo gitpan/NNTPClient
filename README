@@ -1,0 +1,88 @@
+NAME
+
+News::NNTPClient - Perl 5 module to talk to NNTP (RFC977) server
+
+DESCRIPTION
+
+This module implements a client interface to NNTP, enabling a Perl 5
+application to talk to NNTP servers.  It uses the OOP (Object Oriented
+Programming) interface introduced with Perl 5.
+
+CHANGES
+
+RELEASED TO CPAN
+0.26 Moved initialization to separate subroutine so it may be sub-classed.
+
+0.25 General cleanup and update to use Socket-1.5 and perl 5.002.
+
+0.24 Moved documentation to end of module.
+
+0.23 Created README, changed $version to $VERSION, started using Makefile.PL.
+
+RELEASED TO CPAN
+0.22 Better failure handling.
+
+0.21 Made hostname lookup less strict.
+
+0.20 Fixed message(), created internal msg(), changed date() and xpath() to
+     use msg().
+
+0.19 Updated documentation.
+
+0.18 Allow null responses, report garbled responses.
+
+RELEASED TO CPAN
+0.17 Updated documentation.
+
+0.16 Fixed bug in debug initialization.
+
+...
+
+INSTALLATION
+
+To install News::NNTPClient, perform the following steps.  You'll
+likely need to have system administration (a.k.a root, super-user)
+privilege to perform any of these steps:
+
+    perl Makefile.PL
+    make
+    make install
+
+If that doesn't do it for you, you can try the following manual steps:
+
+Copy NNTPClient.pm to perl5lib, where perl5lib is your local Perl 5
+library directory, usually /usr/local/lib/perl5.  You'll likely have
+to create the News directory, as the perl5 distribution doesn't
+normally include it.  Be sure to give everyone read permission on the
+file and read/execute permission on the directory.
+
+    umask 022
+    mkdir /usr/local/lib/perl5/News
+    cp NNTPClient.pm /usr/local/lib/perl5/News
+
+You could then run the following to create a man page:
+
+    cd /usr/local/lib/perl5/News
+    pod2man NNTPClient.pm > /usr/local/man/man1/NNTPClient.1
+
+AUTHOR
+
+Rodger V. Anderson  <rodger@boi.hp.com>
+
+SOURCE
+
+The latest version may be retrieved from your nearest CPAN
+(Comprehensive Perl Archive Network) site, in the directory
+CPAN/modules/by-module/News.  A list of CPAN sites can be found at:
+
+    http://www.perl.com/perl/CPAN/CPAN.html
+
+You might also try:
+
+    http://www.perl/com/CPAN/modules/by-module/News
+
+COPYRIGHT
+
+Copyright (c) 1995 Rodger Anderson. All rights reserved.  This module
+is free software; you may redistribute and/or modify it under the same
+terms as Perl itself.
