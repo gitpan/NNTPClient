@@ -38,9 +38,8 @@ $c = new News::NNTPClient;
 $c->gmt(1);
 $c->fourdigityear(1);
 
-@f = qw(version debug eol gmt fourdigityear message ok okprint code postok mode_reader list help slave);
-
-for $f (@f) {
+for $f (qw(version debug eol gmt fourdigityear message code
+	   ok okprint postok mode_reader list help slave)) {
   print "not " unless $c->$f();
   print "ok ", $i++, " ($f)\n";
 }
@@ -53,25 +52,22 @@ print <<EOF;
 
 EOF
 
-$testgroup = "test";
+$TESTGROUP = "test";
 
-@a = split /\n/, <<EOF;
-Newsgroups: $testgroup
-From: tester
+print "not " unless $c->post(split(/\n/,<<EOF));
+Newsgroups: $TESTGROUP
+From: tester\@localhost.
 Subject: test
 
-Body of test
+Body Of Test.
 EOF
 
-print "not " unless $c->post(@a);
 print "ok ", $i++, " (post)\n";
 
-print "not " unless ($first, $last) = $c->group($testgroup);
+print "not " unless ($first, $last) = $c->group($TESTGROUP);
 print "ok ", $i++, " (group)\n";
 
-@f = qw(article body head last next stat);
-
-for $f (@f) {
+for $f (qw(article body head last next stat)) {
   print "not " unless $msgid = $c->$f($last);
   print "ok ", $i++, " ($f)\n";
 }
@@ -79,9 +75,7 @@ for $f (@f) {
 # My server does not understand four digit years.
 $c->fourdigityear(0);
 
-@f = qw(newgroups newnews);
-
-for $f (@f) {
+for $f (qw(newgroups newnews)) {
   print "not " unless $c->$f(time());
   print "ok ", $i++, " ($f)\n";
 }
@@ -90,9 +84,7 @@ for $f (@f) {
 # ihave authinfo
 
 
-@f = qw(date listgroup);
-
-for $f (@f) {
+for $f (qw(date listgroup)) {
   print "not " unless $c->$f();
   print "ok ", $i++, " ($f)\n";
 }
@@ -105,19 +97,15 @@ print <<EOF;
 
 EOF
 
-# xmotd xgtitle xpath xhdr xpat xover xthread xindex xsearch
+# xpath xgtitle xhdr xpat xover xmotd xthread xindex xsearch
 
 print "not " unless $c->xpath($msgid);
 print "ok ", $i++, " (xpath $msgid)\n";
 
-@f = qw(xmotd xgtitle xhdr xpat xover xthread xindex xsearch);
-for $f (@f) {
+for $f (qw(xgtitle xhdr xpat xover xmotd xthread xindex xsearch)) {
   print "not " unless $c->$f();
   print "ok ", $i++, " ($f)\n";
 }
-
-# This should be last
-print "not " unless $c->quit();
 
 print <<EOF;
 
@@ -129,4 +117,6 @@ print <<EOF;
 
 EOF
 
+# This should be last
+print "not " unless $c->quit();
 print "ok ", $i++, " (quit)\n";

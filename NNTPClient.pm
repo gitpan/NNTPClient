@@ -9,7 +9,7 @@ use strict qw(vars subs);
 use vars qw($VERSION $fhcnt);
 
 $fhcnt = 0;			# File handle counter, to insure unique socket.
-$VERSION = (qw$Revision: 0.36 $)[1];
+$VERSION = (qw$Revision: 0.37 $)[1];
 
 # Create a new NNTP object.  Set up defaults for host and port, and
 # attempt connection.  For host, if not supplied, check the
@@ -281,11 +281,12 @@ sub group {
 
 # List all groups.
 sub list {
-    my $me = shift;
+    my $me   = shift;
     my $type = shift || "";
+    my $pat  = shift || "";
 
     $me->{CMND} = "fetch";
-    $me->command("LIST $type");
+    $me->command("LIST $type $pat");
 }
 
 # List new groups since date/time.
@@ -973,7 +974,7 @@ century closest.  I quote:
 
 Returns version number.
 
-This document represents @(#) $Revision: 0.36 $.
+This document represents @(#) $Revision: 0.37 $.
 
 =back
 
@@ -1099,8 +1100,16 @@ message.  See I<message>.
 
 =item I<list>
 
-Accepts one optional argument that can be used indicate the type of
-list desired.  List type depends on server.
+Accepts two optional arguments.  The first can be used indicate the
+type of list desired.  List type depends on server.  The second is a
+pattern that is use by some list types.
+
+Examples:
+
+  print $c->list();
+  print $c->list('active');
+  print $c->list('active', 'local.*');
+  print $c->list('newsgroups');
 
 With an argument of "active" or with no arguments, this command
 returns a list of valid newsgroups and associated information.  The
