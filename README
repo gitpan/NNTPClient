@@ -11,6 +11,11 @@ Programming) interface introduced with Perl 5.
 CHANGES
 
 RELEASED TO CPAN
+0.28 Added GMT.  Use gmt() method to set to GMT mode.
+
+0.27 Delete reference to fetch by e-mail.  Most fetch from CPAN now.
+
+RELEASED TO CPAN
 0.26 Moved initialization to separate subroutine so it may be sub-classed.
 
 0.25 General cleanup and update to use Socket-1.5 and perl 5.002.

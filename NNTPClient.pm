@@ -9,7 +9,7 @@ use strict qw(vars subs);
 use vars qw($VERSION $fhcnt);
 
 $fhcnt = 0;			# File handle counter, to insure unique socket.
-$VERSION = (qw$Revision: 0.26 $)[1];
+$VERSION = (qw$Revision: 0.28 $)[1];
 
 # Create a new NNTP object.  Set up defaults for host and port, and
 # attempt connection.  For host, if not supplied, check the
@@ -33,6 +33,7 @@ sub new {
 	POST => undef,
  	TRAP => undef,
 	EOL  => "\n",
+	GMT  => 0,
     }, $name;
 
     $me->initialize();
@@ -145,6 +146,18 @@ sub eol {
 
     # Set to new EOL only if passed a value.
     $me->{EOL} = $new if defined $new;
+
+    $old;
+}
+
+# Set GMT
+sub gmt {
+    my $me = shift;
+    my $new = shift;
+    my $old = $me->{GMT};
+
+    # Set to new GMT only if passed a value.
+    $me->{GMT} = $new if defined $new;
 
     $old;
 }
@@ -266,7 +279,7 @@ sub list {
 # List new groups since date/time.
 sub newgroups {
     my $me = shift;
-    my $since = yymmdd_hhmmss(shift);
+    my $since = $me->yymmdd_hhmmss(shift);
 
     my $dist = distributions(@_);
 
@@ -292,8 +305,8 @@ sub newnews {
 	}
     }
 
-    $group = $group || $me->{GROUP} || "*";
-    $since = yymmdd_hhmmss($since);
+    $group ||= $me->{GROUP} || "*";
+    $since = $me->yymmdd_hhmmss($since);
 
     my $dist = distributions(@_);
 
@@ -395,7 +408,7 @@ sub listgroup {
 # Get message of the day.
 sub xmotd {
     my $me = shift;
-    my $since = yymmdd_hhmmss(shift);
+    my $since = $me->yymmdd_hhmmss(shift);
 
     $me->{CMND} = "fetch";
     $me->command("XMOTD $since");
@@ -673,16 +686,18 @@ sub squirt {
 # return it.  Otherwise use localtime() to convert seconds to
 # date/time.  Default is current time.
 sub yymmdd_hhmmss {
+    my $me = shift;
     my $time = shift || time();
 
     # Already in the correct format?
-    return $time if $time =~ /^\d{6} \d{6}$/;
+    return $time if $time =~ /^\d{6}\s*\d{6}(\s*GMT)?$/;
 
     # returns Seconds, Minutes, Hours, days, months - 1, years.
-    my @t = (localtime($time))[0..5];
+    my @t = $me->{GMT} ? (gmtime($time))[0..5] :
+                      (localtime($time))[0..5];
     $t[4]++;			# Fix up month;
     my $fmt = "%.02d" x 3;
-    sprintf "$fmt $fmt", reverse @t;
+    sprintf "$fmt $fmt%s", reverse(@t), $me->{GMT} ? " GMT" : "";
 }
 
 # Convert list of newsgroup prefixes to distribution list.  For
@@ -907,11 +922,19 @@ Example:
   @article = $c->article(); # Fetch an article.
   $c->eol($old_eol);        # Restore value.
 
+=item I<gmt>
+
+Sets GMT mode.  Returns old value.  To query GMT mode without setting
+it, call with no arguments.
+
+A true value means that GMT mode is used in the I<newgroups> and
+I<newnews> functions.  A false value means that local time is used.
+
 =item I<version>
 
 Returns version number.
 
-This document represents @(#) $Revision: 0.26 $.
+This document represents @(#) $Revision: 0.28 $.
 
 =back
 
@@ -1063,8 +1086,9 @@ array itself.
 =item I<newgroups>
 
 Expects at least one argument representing the date/time in seconds,
-or in S<"YYMMDD HHMMSS"> format.  Remaining arguments are used as
-distributions.
+or in S<"YYMMDD HHMMSS [GMT]"> format.  The GMT part is optional.  If
+you wish to use GMT with the seconds format, first call I<gmt>.
+Remaining arguments are used as distributions.
 
 Example, print all new groups in the "comp" and/or "news" hierarchy as
 of one hour ago:
@@ -1083,10 +1107,11 @@ Expects one, two, or more arguments.
 
 If the first argument is a group name, it looks for new news in that
 group, and the date/time is the second argument.  If the first
-argument represents the date/time in seconds or in "YYMMDD HHMMSS"
-format, then the group is is last group set via the I<group>
+argument represents the date/time in seconds or in "YYMMDD HHMMSS
+[GMT]" format, then the group is is last group set via the I<group>
 command. If no I<group> command has been issued then the group is "*",
-representing all groups.  Remaining arguments are use to restrict
+representing all groups.  If you wish to use GMT in seconds format for
+the time, first call I<gmt>.  Remaining arguments are use to restrict
 search to certain distribution(s).
 
 Returns a list of Message-IDs of articles that have been posted or
@@ -1404,16 +1429,6 @@ Format of query is unknown at this time.
 =head1 AUTHOR
 
 Rodger Anderson  <rodger@boi.hp.com>
-
-=head1 SOURCE
-
-The latest version may be retrieved by sending mail to:
-
-  <rodger@boi.hp.com>
-
-with the body of the message starting with:
-
-  send nntpclient
 
 =head1 COPYRIGHT
 
