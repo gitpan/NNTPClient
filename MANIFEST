@@ -2,5 +2,6 @@ MANIFEST
 README
 Makefile.PL
 NNTPClient.pm
-NNTPFetchProgress.pm
 test.pl
+demos/NNTPFetchProgress.pm
+demos/NNTPHuge.pm

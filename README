@@ -15,14 +15,28 @@ Programming) interface introduced with Perl 5.
 I've made changes to make this module "Year 2000" compliant (catch
 phrase of the millennium?).  If your NNTP server is "Year 2000"
 compliant, things should work without modification.  If your NNTP
-server is NOT "Year 2000" compliant, you will need to use the y2k()
-method to turn off y2k compliance in News::NNTPClient.  To do this,
-just add a call to the y2k() method after the call to new:
+server is NOT "Year 2000" compliant, you will have problems with the
+three commands that make use of the date.
+
+RFC977 specifies that the year is two digits.  It further specifies
+that the closest century is assumed.  I quote:
+
+    The closest century is assumed as part of the year (i.e., 86
+    specifies 1986, 30 specifies 2030, 99 is 1999, 00 is 2000).
+
+However, some servers apparently have been changed to use four digit
+years, so I've added a method to turn on four digit years.  Further,
+the year is now modified to be no more than two digits if the four
+digit year mode is off.  For example, in the year 2000, in four digit
+mode, the year will be 2000 and in two digit mode it will be 00.
+
+To turn it on, just add a call to the fourdigityear() method after the
+call to new:
 
    $c = new News::NNTPClient;
-   $c->y2k(0);
+   $c->fourdigityear(1);
 
-This affects these methods:
+The three NNTP commands affected by the date are:
 
    newgroups()
    newnews()
@@ -33,38 +47,25 @@ which call
    yymmdd_hhmmss()
 
 If you don't use any of these methods, then you shouldn't be affected
-by year 2000 problems.
+by two vs. four digit year problems.
 
 My NNTP server is not yet year 2000 compliant, so these changes have
 not been well tested.  However, calls to yymmdd_hhmmss() work as
 expected.
 
-CHECKING YOUR SERVER FOR YEAR 2000 COMPLIANCE
-
-To tell if your server is "Year 2000" compliant, try the following
-(this doesn't use News::NNTPClient):
-
-    telnet news.server.com 119
-    newnews test 19990101 000000
-    quit
-
-If it comes back with
-
-    501 Bad date
-
-then it probably is NOT "Year 2000" compliant.
-
-If it comes back with
-
-    203 New news follows
-
-then it probably is "Year 2000" compliant.
-
 CHANGES
+
+RELEASE TO CPAN
+0.36 Fixed bug in group/groupinfo.  Now returns false for invalid group.
+
+0.35 More documentation for post.  More extensive testing in test.pl.
+
+0.34 Year is four or two digits; two digit Y2K will be 00, not 100.
 
 RELEASED TO CPAN
 0.33 Removed (c), fixed spelling.  Removed date checks from test.pl.
 
+RELEASED TO CPAN (then deleted)
 0.32 Added Y2K flag and method to enable use with old servers.
 
 0.31 Documented xhdr allows Message-ID.
@@ -113,8 +114,12 @@ likely need to have system administration (a.k.a. root, super-user)
 privilege to perform the install step:
 
     perl Makefile.PL
-    make
+    make test
     make install
+
+Be warned that some of the tests may fail, depending on your news
+server.  If you don't have access to a news server, most of the tests
+will fail.
 
 If that doesn't do it for you, you can try the following manual steps:
 
@@ -149,9 +154,8 @@ You might also try:
 
     http://www.perl.com/CPAN/modules/by-module/News/
 
-
 COPYRIGHT
 
-Copyright 1995 Rodger Anderson. All rights reserved.  This module
+Copyright 1995 Rodger V. Anderson. All rights reserved.  This module
 is free software; you may redistribute and/or modify it under the same
 terms as Perl itself.

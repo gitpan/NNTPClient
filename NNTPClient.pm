@@ -9,7 +9,7 @@ use strict qw(vars subs);
 use vars qw($VERSION $fhcnt);
 
 $fhcnt = 0;			# File handle counter, to insure unique socket.
-$VERSION = (qw$Revision: 0.33 $)[1];
+$VERSION = (qw$Revision: 0.36 $)[1];
 
 # Create a new NNTP object.  Set up defaults for host and port, and
 # attempt connection.  For host, if not supplied, check the
@@ -31,10 +31,9 @@ sub new {
 	MESG => "",
 	CODE => 0,
 	POST => undef,
- 	TRAP => undef,
-	EOL  => "\n",
-	GMT  => 0,
-        Y2K  => 1,
+	EOL  => "\n",		# End Of Line
+	GMT  => 0,		# Greenwich Mean Time
+        FDY  => 0,		# Four Digit Year
     }, $name;
 
     $me->initialize();
@@ -163,14 +162,14 @@ sub gmt {
     $old;
 }
 
-# Set GMT
-sub y2k {
+# Set Four digit year flag.
+sub fourdigityear {
     my $me = shift;
     my $new = shift;
-    my $old = $me->{Y2K};
+    my $old = $me->{FDY};
 
-    # Set to new Y2K only if passed a value.
-    $me->{Y2K} = $new if defined $new;
+    # Set to new FDY only if passed a value.
+    $me->{FDY} = $new if defined $new;
 
     $old;
 }
@@ -572,6 +571,8 @@ sub groupinfo {
 	$me->{GROUP} = $4;
 	return wantarray ? ($2, $3) : "$2-$3";
     }
+
+    return;
 }
 
 # Extract Message-ID from MESG.
@@ -707,15 +708,19 @@ sub yymmdd_hhmmss {
 
     # Check for old format.
     if ($time =~ /^\d{6}\s+\d{6}(\s*GMT)?$/) {
-      carp "Non Y2K compliant date, using anyway\n" if $me->{Y2K};
+      carp "Short year in date, using anyway\n" if $me->{FDY};
       return $time;
     }
 
     # returns Seconds, Minutes, Hours, days, months - 1, years.
     my @t = ($me->{GMT} ? gmtime($time) : localtime($time))[0..5];
 
-    $t[4]++;			 # Fix up month
-    $t[5] += 1900 if $me->{Y2K}; # Fix up year for Y2K
+    $t[4]++;			# Fix up month
+    if ($me->{FDY}) {	
+      $t[5] += 1900;		# Fix up year for 4 digit year.
+    } else {			
+      $t[5] %= 100;		# Fix up year for 2 digit year.
+    }
     my $fmt = "%.02d" x 3;
     sprintf "$fmt $fmt%s", reverse(@t), $me->{GMT} ? " GMT" : "";
 }
@@ -924,15 +929,13 @@ after the mode_reader command.
 
 Sets the End-Of-Line termination for text returned from the server.
 
-Returns the old EOL setting.
+Returns the old EOL value.
 
 Default is \n.
 
 To set EOL to nothing, pass it the empty string.
 
 To query current EOL without setting it, call with no arguments.
-
-Returns the old EOL termination.
 
 Example:
 
@@ -949,11 +952,28 @@ it, call with no arguments.
 A true value means that GMT mode is used in the I<newgroups> and
 I<newnews> functions.  A false value means that local time is used.
 
+=item I<fourdigityear>
+
+Sets four digit year mode.  Returns old value.  To query four digit
+year mode without setting it, call with no arguments.
+
+A true value means that four digit years are used in the I<newgroups>
+and I<newnews> functions.  A false value means that an RFC977
+compliant two digit year is used.
+
+This function is available for news servers that implemented four
+digit years rather than deal with non-y2k compliment two digit years.
+RFC977 does not allow four digit years, and instead chooses the
+century closest.  I quote:
+
+    The closest century is assumed as part of the year (i.e., 86
+    specifies 1986, 30 specifies 2030, 99 is 1999, 00 is 2000).
+
 =item I<version>
 
 Returns version number.
 
-This document represents @(#) $Revision: 0.33 $.
+This document represents @(#) $Revision: 0.36 $.
 
 =back
 
@@ -1199,12 +1219,25 @@ to separate the header from the body with a neck, er blank line.
 
 Example:
 
-  @header = ("Newsgroups: test", "Subject: test");
+  @header = ("Newsgroups: test", "Subject: test", "From: tester");
   @body   = ("This is the body of the article");
 
   $c->post(@header, "", @body);
 
+
+There aren't really three arguments.  Perl folds all arguments into a
+single list.  You could also do this:
+
+  @article = ("Newsgroups: test", "Subject: test", "From: tester", "", "Body");
+  $c->post(@article);
+
+or even this:
+
+  $c->post("Newsgroups: test", "Subject: test", "From: tester", "", "Body");
+
 Any "\n" characters at the end of a line will be trimmed.
+
+Returns status.
 
 =item I<ihave>
 
