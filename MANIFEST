@@ -3,3 +3,4 @@ README
 Makefile.PL
 NNTPClient.pm
 NNTPFetchProgress.pm
+test.pl

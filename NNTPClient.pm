@@ -9,7 +9,7 @@ use strict qw(vars subs);
 use vars qw($VERSION $fhcnt);
 
 $fhcnt = 0;			# File handle counter, to insure unique socket.
-$VERSION = (qw$Revision: 0.28 $)[1];
+$VERSION = (qw$Revision: 0.32 $)[1];
 
 # Create a new NNTP object.  Set up defaults for host and port, and
 # attempt connection.  For host, if not supplied, check the
@@ -34,6 +34,7 @@ sub new {
  	TRAP => undef,
 	EOL  => "\n",
 	GMT  => 0,
+        Y2K  => 1,
     }, $name;
 
     $me->initialize();
@@ -158,6 +159,18 @@ sub gmt {
 
     # Set to new GMT only if passed a value.
     $me->{GMT} = $new if defined $new;
+
+    $old;
+}
+
+# Set GMT
+sub y2k {
+    my $me = shift;
+    my $new = shift;
+    my $old = $me->{Y2K};
+
+    # Set to new Y2K only if passed a value.
+    $me->{Y2K} = $new if defined $new;
 
     $old;
 }
@@ -681,7 +694,7 @@ sub squirt {
     $me->response();
 }
 
-# Return time in YYMMDD HHMMSS format, for use with newnews and
+# Return time in YYYYMMDD HHMMSS format, for use with newnews and
 # newgroups commands.  If passed a string already in that format, just
 # return it.  Otherwise use localtime() to convert seconds to
 # date/time.  Default is current time.
@@ -690,12 +703,19 @@ sub yymmdd_hhmmss {
     my $time = shift || time();
 
     # Already in the correct format?
-    return $time if $time =~ /^\d{6}\s*\d{6}(\s*GMT)?$/;
+    return $time if $time =~ /^\d{8}\s+\d{6}(\s*GMT)?$/;
+
+    # Check for old format.
+    if ($time =~ /^\d{6}\s+\d{6}(\s*GMT)?$/) {
+      carp "Non Y2K compliant date, using anyway\n" if $me->{Y2K};
+      return $time;
+    }
 
     # returns Seconds, Minutes, Hours, days, months - 1, years.
-    my @t = $me->{GMT} ? (gmtime($time))[0..5] :
-                      (localtime($time))[0..5];
-    $t[4]++;			# Fix up month;
+    my @t = ($me->{GMT} ? gmtime($time) : localtime($time))[0..5];
+
+    $t[4]++;			 # Fix up month
+    $t[5] += 1900 if $me->{Y2K}; # Fix up year for Y2K
     my $fmt = "%.02d" x 3;
     sprintf "$fmt $fmt%s", reverse(@t), $me->{GMT} ? " GMT" : "";
 }
@@ -715,21 +735,20 @@ __END__
 
 News::NNTPClient - Perl 5 module to talk to NNTP (RFC977) server
 
+=head1 SYNOPSIS
+
+    use News::NNTPClient;
+
+    $c = new News::NNTPClient;
+    $c = new News::NNTPClient($server);
+    $c = new News::NNTPClient($server, $port);
+    $c = new News::NNTPClient($server, $port, $debug);
+
 =head1 DESCRIPTION
 
 This module implements a client interface to NNTP, enabling a Perl 5
 application to talk to NNTP servers.  It uses the OOP (Object Oriented
 Programming) interface introduced with Perl 5.
-
-=head1 USAGE
-
-To use it in your programs, you can use either:
-
-  use News::NNTPClient;
-
-or
-
-  require News::NNTPClient;
 
 NNTPClient exports nothing.
 
@@ -934,7 +953,7 @@ I<newnews> functions.  A false value means that local time is used.
 
 Returns version number.
 
-This document represents @(#) $Revision: 0.28 $.
+This document represents @(#) $Revision: 0.32 $.
 
 =back
 
@@ -1086,7 +1105,7 @@ array itself.
 =item I<newgroups>
 
 Expects at least one argument representing the date/time in seconds,
-or in S<"YYMMDD HHMMSS [GMT]"> format.  The GMT part is optional.  If
+or in S<"YYYYMMDD HHMMSS [GMT]"> format.  The GMT part is optional.  If
 you wish to use GMT with the seconds format, first call I<gmt>.
 Remaining arguments are used as distributions.
 
@@ -1107,7 +1126,7 @@ Expects one, two, or more arguments.
 
 If the first argument is a group name, it looks for new news in that
 group, and the date/time is the second argument.  If the first
-argument represents the date/time in seconds or in "YYMMDD HHMMSS
+argument represents the date/time in seconds or in "YYYYMMDD HHMMSS
 [GMT]" format, then the group is is last group set via the I<group>
 command. If no I<group> command has been issued then the group is "*",
 representing all groups.  If you wish to use GMT in seconds format for
@@ -1254,7 +1273,7 @@ array itself.
 =item I<xmotd>
 
 Expects one argument of unix time in seconds or as a string in the
-form "YYMMDD HHMMSS".
+form "YYYYMMDD HHMMSS".
 
 Returns the news servers "Message Of The Day" as an array of lines
 terminated by the current EOL.
@@ -1306,8 +1325,9 @@ Example:
 
 Fetch header for a range of articles.  First argument is name of
 header to fetch.  If omitted or blank, default to Message-ID.  Second
-argument is start of article range.  If omitted, defaults to 1.  Next
-argument is end of range.
+argument is start of article range.  If omitted, defaults to 1.  Third
+argument is end of range.  If omitted, defaults to "".  The second
+argument can also be a Message-ID.
 
 Returns headers as an array of lines terminated by the current EOL.
 
@@ -1330,6 +1350,9 @@ Examples:
 
   # Fetch Message-ID of articles 3345-9873
   $c->xhdr("", 3345,9873);
+
+  # Fetch Subject for article with Message-ID
+  $c->xhdr("Subject", '<797t0g$25f10@foo.com>');
 
 =item I<xpat>
 
@@ -1393,7 +1416,7 @@ group.
   }
 
   __END__
-
+				# 
 =item I<xthread>
 
 Expects zero or one argument.  Value of argument doesn't matter.  If

@@ -8,7 +8,68 @@ This module implements a client interface to NNTP, enabling a Perl 5
 application to talk to NNTP servers.  It uses the OOP (Object Oriented
 Programming) interface introduced with Perl 5.
 
+##########################
+# YEAR 2000 (Y2K) NOTICE #
+##########################
+
+I've made changes to make this module "Year 2000" compliant (catch
+phrase of the millennium?).  If your NNTP server is "Year 2000"
+compliant, things should work without modification.  If your NNTP
+server is NOT "Year 2000" compliant, you will need to use the y2k()
+method to turn off y2k compliance in News::NNTPClient.  To do this,
+just add a call to the y2k() method after the call to new:
+
+   $c = new News::NNTPClient;
+   $c->y2k(0);
+
+This affects these methods:
+
+   newgroups()
+   newnews()
+   xmotd()
+
+which call
+
+   yymmdd_hhmmss()
+
+If you don't use any of these methods, then you shouldn't be affected
+by year 2000 problems.
+
+My NNTP server is not yet year 2000 compliant, so these changes have
+not been well tested.  However, calls to yymmdd_hhmmss() work as
+expected.
+
+CHECKING YOUR SERVER FOR YEAR 2000 COMPLIANCE
+
+To tell if your server is "Year 2000" compliant, try the following
+(this doesn't use News::NNTPClient):
+
+    telnet news.server.com 119
+    newnews test 19990101 000000
+    quit
+
+If it comes back with
+
+    501 Bad date
+
+then it probably is NOT "Year 2000" compliant.
+
+If it comes back with
+
+    203 New news follows
+
+then it probably is "Year 2000" compliant.
+
 CHANGES
+
+RELEASED TO CPAN
+0.32 Added Y2K flag and method to enable use with old servers.
+
+0.31 Documented xhdr allows Message-ID.
+
+0.30 Change USAGE to SYNOPSIS in documentation.
+
+0.29 Added Y2K fix.  Generates YYYYMMDD HHMMSS instead of YYMMDD HHMMSS.
 
 RELEASED TO CPAN
 0.28 Added GMT.  Use gmt() method to set to GMT mode.
@@ -46,8 +107,8 @@ RELEASED TO CPAN
 INSTALLATION
 
 To install News::NNTPClient, perform the following steps.  You'll
-likely need to have system administration (a.k.a root, super-user)
-privilege to perform any of these steps:
+likely need to have system administration (a.k.a. root, super-user)
+privilege to perform the install step:
 
     perl Makefile.PL
     make
@@ -84,7 +145,8 @@ CPAN/modules/by-module/News.  A list of CPAN sites can be found at:
 
 You might also try:
 
-    http://www.perl/com/CPAN/modules/by-module/News
+    http://www.perl.com/CPAN/modules/by-module/News/
+
 
 COPYRIGHT
 
